@@ -1,0 +1,181 @@
+:root{
+  /* === COLORES CORPORATIVOS (ajusta a tus hex exactos) === */
+  /* Inspiración Vico Export: azul marino + naranja acento */
+  --brand-bg: #0b1b2b;         /* fondo cabecera */
+  --brand-primary: #102a43;    /* azulado oscuro UI */
+  --brand-primary-2: #1f3b56;  /* variación */
+  --brand-accent: #ff7a00;     /* acento (botones, foco) */
+  --brand-accent-2: #ffa24a;   /* hover acento */
+  --brand-card: #ffffff;       /* fondo tarjetas */
+  --brand-soft: #f4f6f8;       /* fondos suaves */
+  --text-strong: #0f172a;      /* texto principal */
+  --text-muted: #6b7280;       /* texto secundario */
+  --ring: rgba(255,122,0,0.35);/* glow de enfoque/acento */
+
+  --radius: 16px;
+  --radius-sm: 12px;
+  --shadow-1: 0 6px 18px rgba(0,0,0,0.08);
+  --shadow-2: 0 10px 28px rgba(0,0,0,0.12);
+
+  --tap: 52px;  /* altura mínima tap targets móvil */
+  --gap: 12px;
+  --gap-lg: 16px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+  background: var(--brand-soft);
+  color: var(--text-strong);
+}
+
+/* Header */
+.app-header{
+  background: linear-gradient(180deg, var(--brand-bg), var(--brand-primary));
+  color:#fff; text-align:center; padding:18px 12px;
+  position:sticky; top:0; z-index:10;
+  box-shadow: var(--shadow-1);
+}
+.app-header h1{margin:0; font-size:1.1rem; letter-spacing:0.3px}
+
+/* Tabs */
+.tabs{
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:2px; background:var(--brand-primary);
+  position:sticky; top:62px; z-index:9;
+}
+.tab{
+  height: var(--tap);
+  background: var(--brand-primary-2);
+  color:#e5e7eb; font-weight:700; border:0; cursor:pointer;
+  transition: transform .1s ease, background .2s ease;
+}
+.tab.active{ background: var(--brand-accent); color:#111827 }
+.tab:active{ transform: scale(.98) }
+
+/* Vistas */
+.view{ display:none; padding:16px; padding-bottom:88px }
+.view.active{ display:block }
+
+/* Nav de semana */
+.week-nav{
+  display:grid; grid-template-columns:auto 1fr auto; align-items:center;
+  gap: var(--gap); margin-bottom: var(--gap-lg);
+}
+.week-title{
+  text-align:center; font-weight:800; color:#111827;
+}
+.ghost{
+  height: var(--tap);
+  background: transparent; border:2px solid var(--brand-primary-2); color:#0f172a;
+  border-radius: var(--radius-sm); padding:0 12px; font-weight:700; cursor:pointer;
+  transition: background .2s ease, transform .08s ease;
+}
+.ghost:hover{ background:#e7eef7 }
+.ghost:active{ transform: translateY(1px) }
+
+/* Días (tarjetas) */
+.days-container{ display:flex; flex-direction:column; gap:18px }
+.card{
+  background: var(--brand-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-1);
+  padding: 14px;
+}
+
+/* Cabecera día */
+.day-head{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:10px;
+}
+.day-title{
+  font-weight:900; font-size:1.05rem; color:#0b1220;
+}
+.day-date{ color: var(--text-muted); font-weight:600 }
+
+/* Chips jugadores */
+.player-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:10px;
+}
+@media (min-width:420px){ .player-grid{ grid-template-columns:1fr 1fr 1fr } }
+
+.player-chip{
+  display:flex; align-items:center; gap:10px;
+  background: #f9fafb;
+  border:2px solid #edf2f7;
+  border-radius: var(--radius-sm);
+  padding:12px; height: var(--tap);
+  font-weight:800; cursor:pointer;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02) inset;
+  transition: transform .08s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+  user-select:none; -webkit-tap-highlight-color: transparent;
+}
+.player-chip .emoji{ font-size:1.2rem }
+.player-chip .name{ flex:1 }
+.player-chip .state{ font-size:.8rem; color:#64748b; font-weight:700 }
+
+.player-chip:hover{ transform: translateY(-1px); box-shadow: var(--shadow-1) }
+.player-chip:active{ transform: scale(.99) }
+
+.player-chip.selected{
+  background: #fff7f0;
+  border-color: var(--brand-accent);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+.player-chip.selected .state{ color:#9a3412 }
+
+/* Añadir invitado */
+.add-guest{
+  display:flex; gap:8px; margin-top:10px;
+}
+.add-guest input{
+  flex:1; height: var(--tap); padding: 0 12px;
+  border:2px solid #e5e7eb; border-radius: var(--radius-sm);
+  font-weight:700;
+}
+.primary{
+  height: var(--tap);
+  background: var(--brand-accent); color:#111827; border:0;
+  border-radius: var(--radius-sm); padding:0 16px; font-weight:900; cursor:pointer;
+  box-shadow: var(--shadow-2);
+  transition: transform .08s ease, background .15s ease;
+}
+.primary:hover{ background: var(--brand-accent-2) }
+.primary:active{ transform: translateY(1px) }
+
+/* Festivo */
+.festivo details{
+  background: var(--brand-card); border-radius: var(--radius);
+  box-shadow: var(--shadow-1); padding:10px;
+}
+.festivo summary{ cursor:pointer; font-weight:900 }
+.festivo-controls{
+  display:flex; flex-direction:column; gap:10px; margin-top:10px;
+}
+.festivo-controls input{ height: var(--tap); border:2px solid #e5e7eb; border-radius: var(--radius-sm); padding:0 10px; font-weight:700 }
+
+/* Cervezas */
+.form-row{
+  display:flex; gap:10px; margin:10px 0; flex-wrap:wrap;
+}
+.form-row input{
+  height: var(--tap); border:2px solid #e5e7eb; border-radius: var(--radius-sm);
+  padding:0 12px; font-weight:700; width:160px;
+}
+.summary-list, .beer-list{
+  list-style:none; padding:0; margin:10px 0 0;
+}
+.summary-list li, .beer-list li{
+  display:flex; justify-content:space-between; align-items:center;
+  background:#f9fafb; border:1px solid #eef2f7;
+  padding:12px; border-radius: var(--radius-sm); margin-bottom:8px;
+  font-weight:800;
+}
+.summary-list .amount, .beer-list .amount{ color:#1f2937 }
+.muted{ color: var(--text-muted) }
+
+.app-footer{
+  position:sticky; bottom:0; text-align:center; padding:12px; color:#cbd5e1;
+  background: linear-gradient(0deg, var(--brand-primary), var(--brand-bg));
+}

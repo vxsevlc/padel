@@ -2,301 +2,79 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />  <!-- Meta viewport para diseño responsive -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Partidas Padel Casa Jonfi</title>
-  <style>
-    :root {
-      --color-primary: #388E3C;    /* Ejemplo de color principal (verde oscuro) */
-      --color-secondary: #8BC34A;  /* Ejemplo de color secundario (verde claro) */
-      --bg-color: #f9f9f9;
-      --text-color: #333;
-    }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: var(--bg-color);
-      color: var(--text-color);
-    }
-    header {
-      background: var(--color-primary);
-      color: #fff;
-      text-align: center;
-      padding: 1rem;
-      font-size: 1.2rem;
-      font-weight: bold;
-    }
-    /* Navegación de pestañas */
-    nav {
-      display: flex;
-      background: var(--color-secondary);
-    }
-    nav button {
-      flex: 1;
-      padding: 0.8rem;
-      font-size: 1rem;
-      font-weight: bold;
-      border: none;
-      background: var(--color-secondary);
-      color: #fff;
-      cursor: pointer;
-    }
-    nav button.activeTab {
-      background: var(--color-primary); /* pestaña activa destacada en color principal */
-    }
-    /* Secciones */
-    section {
-      display: none; /* por defecto, ocultas; se mostrará la activa */
-      padding: 1rem;
-    }
-    section.active {
-      display: block;
-    }
-    /* Estilo para cada día de partido */
-    .week-block {
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 2px solid var(--color-secondary);
-    }
-    .week-block h3 {
-      font-size: 1.1rem;
-      color: var(--color-primary);
-      margin-bottom: 0.5rem;
-    }
-    .day-title {
-      font-weight: bold;
-      margin: 1rem 0 0.5rem;
-    }
-    .players-list {
-      list-style: none;
-      padding-left: 0;
-      margin-bottom: 0.5rem;
-    }
-    .players-list li {
-      margin: 0.3rem 0;
-    }
-    .players-list label {
-      cursor: pointer;
-      /* We can enlarge click area by adding padding */
-      display: flex;
-      align-items: center;
-    }
-    .players-list label input[type="checkbox"] {
-      transform: scale(1.3);
-      margin-right: 0.5rem;
-      /* (Opcional: estilos personalizados del checkbox podrían ir aquí) */
-    }
-    .add-player-form {
-      display: flex;
-      align-items: center;
-      margin: 0.5rem 0 1rem;
-    }
-    .add-player-form input {
-      flex: 1;
-      padding: 0.3rem;
-      font-size: 1rem;
-      margin-right: 0.5rem;
-    }
-    .add-player-form button {
-      padding: 0.4rem 0.6rem;
-      font-size: 0.9rem;
-      background: var(--color-primary);
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .add-player-form button:active {
-      transform: scale(0.98);
-    }
-    /* Cervezas list */
-    #beerList {
-      list-style: none;
-      padding-left: 0;
-      margin-bottom: 1rem;
-    }
-    #beerList li {
-      margin: 0.5rem 0;
-      background: #eee;
-      padding: 0.5rem;
-      border-radius: 4px;
-    }
-    #beerList li span.name {
-      font-weight: bold;
-      color: var(--color-primary);
-    }
-    #beerList li span.amount {
-      font-weight: bold;
-    }
-    .beer-form {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      align-items: center;
-      margin-top: 1rem;
-    }
-    .beer-form input {
-      padding: 0.4rem;
-      font-size: 1rem;
-    }
-    .beer-form input[type="number"] {
-      width: 80px;
-    }
-    .beer-form button {
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-      background: var(--color-primary);
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .beer-form button:active {
-      transform: scale(0.98);
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <header class="app-header">
+    <h1>Partidas Padel Casa Jonfi</h1>
+  </header>
 
-  <header>Partidas Padel Casa Jonfi</header>
-  
-  <nav>
-    <button id="tabPartidas" class="activeTab" onclick="showSection('partidas')">Partidas</button>
-    <button id="tabCervezas" onclick="showSection('cervezas')">Cervezas</button>
+  <nav class="tabs">
+    <button id="tab-partidas" class="tab active" aria-controls="view-partidas">Partidas</button>
+    <button id="tab-cervezas" class="tab" aria-controls="view-cervezas">Cervezas</button>
   </nav>
-  
-  <!-- Sección Partidas -->
-  <section id="partidasSection" class="active">
-    <!-- Semana 1 (ejemplo) -->
-    <div class="week-block">
-      <h3>Semana 6-7 de Septiembre 2025</h3>
-      <div class="day-block">
-        <div class="day-title">Sábado 6/9/2025:</div>
-        <ul class="players-list" id="list-sab-2025-09-06">
-          <!-- Jugadores habituales -->
-          <li><label><input type="checkbox" name="sab-2025-09-06" value="Juan"> Juan 🐷</label></li>
-          <li><label><input type="checkbox" name="sab-2025-09-06" value="Jonfi"> Jonfi 🏃‍♂️</label></li>
-          <li><label><input type="checkbox" name="sab-2025-09-06" value="Bolopo"> Bolopo 🦝</label></li>
-          <li><label><input type="checkbox" name="sab-2025-09-06" value="Korky"> Korky 🦅</label></li>
-          <li><label><input type="checkbox" name="sab-2025-09-06" value="Candy"> Candy 💡</label></li>
-          <li><label><input type="checkbox" name="sab-2025-09-06" value="Bofi"> Bofi 👮</label></li>
-          <!-- Jugadores adicionales se agregarán aquí -->
-        </ul>
-        <div class="add-player-form">
-          <input type="text" id="input-sab-2025-09-06" placeholder="Otro jugador..." />
-          <button onclick="addPlayer('sab-2025-09-06')">Añadir</button>
+
+  <!-- PARTIDAS -->
+  <main id="view-partidas" class="view active" role="region" aria-label="Partidas">
+    <section class="week-nav">
+      <button id="btn-prev-week" class="ghost">&larr; Semana anterior</button>
+      <div class="week-title" id="week-title">Semana</div>
+      <button id="btn-next-week" class="ghost">Semana siguiente &rarr;</button>
+    </section>
+
+    <section id="days-container" class="days-container">
+      <!-- Se rellenará por JS con Sábado/Domingo + Festivo -->
+    </section>
+
+    <section class="festivo">
+      <details>
+        <summary>Añadir un día festivo esta semana</summary>
+        <div class="festivo-controls">
+          <label>Fecha (dentro de la semana):
+            <input type="date" id="festivo-date" />
+          </label>
+          <label>Etiqueta:
+            <input type="text" id="festivo-label" placeholder="Festivo (opcional)"/>
+          </label>
+          <button id="btn-add-festivo" class="primary">Añadir festivo</button>
         </div>
+      </details>
+    </section>
+  </main>
+
+  <!-- CERVEZAS -->
+  <main id="view-cervezas" class="view" role="region" aria-label="Cervezas">
+    <section class="beer-form card">
+      <h2>Registrar cervezas de la semana</h2>
+      <div class="form-row">
+        <label>Pagador
+          <input type="text" id="beer-name" placeholder="Ej. Juan" autocomplete="name"/>
+        </label>
+        <label>Importe (€)
+          <input type="number" id="beer-amount" min="0" step="0.01" placeholder="Ej. 20"/>
+        </label>
       </div>
-      <div class="day-block">
-        <div class="day-title">Domingo 7/9/2025:</div>
-        <ul class="players-list" id="list-dom-2025-09-07">
-          <!-- Jugadores habituales -->
-          <li><label><input type="checkbox" name="dom-2025-09-07" value="Juan"> Juan 🐷</label></li>
-          <li><label><input type="checkbox" name="dom-2025-09-07" value="Jonfi"> Jonfi 🏃‍♂️</label></li>
-          <li><label><input type="checkbox" name="dom-2025-09-07" value="Bolopo"> Bolopo 🦝</label></li>
-          <li><label><input type="checkbox" name="dom-2025-09-07" value="Korky"> Korky 🦅</label></li>
-          <li><label><input type="checkbox" name="dom-2025-09-07" value="Candy"> Candy 💡</label></li>
-          <li><label><input type="checkbox" name="dom-2025-09-07" value="Bofi"> Bofi 👮</label></li>
-          <!-- Jugadores adicionales se agregarán aquí -->
-        </ul>
-        <div class="add-player-form">
-          <input type="text" id="input-dom-2025-09-07" placeholder="Otro jugador..." />
-          <button onclick="addPlayer('dom-2025-09-07')">Añadir</button>
-        </div>
-      </div>
-    </div>
-    <!-- (Se podrían listar más semanas siguientes de forma similar) -->
-  </section>
-  
-  <!-- Sección Cervezas -->
-  <section id="cervezasSection">
-    <h3>Historial de Cervezas</h3>
-    <ul id="beerList">
-      <!-- Ejemplo de entrada existente -->
-      <li><span class="date">Semana 30/08/2025:</span> <span class="name">Juan</span> pagó <span class="amount">20€</span></li>
-    </ul>
-    <!-- Formulario para agregar nueva entrada -->
-    <div class="beer-form">
-      <input type="text" id="beerName" placeholder="Quién paga" />
-      <input type="number" id="beerAmount" placeholder="€" />
-      <button onclick="addBeer()">Añadir registro</button>
-    </div>
-  </section>
-  
-  <script>
-    // Función para cambiar entre secciones Partidas/Cervezas
-    function showSection(section) {
-      const partSec = document.getElementById('partidasSection');
-      const beerSec = document.getElementById('cervezasSection');
-      const tabPart = document.getElementById('tabPartidas');
-      const tabBeer = document.getElementById('tabCervezas');
-      if (section === 'partidas') {
-        partSec.classList.add('active');
-        beerSec.classList.remove('active');
-        tabPart.classList.add('activeTab');
-        tabBeer.classList.remove('activeTab');
-      } else if (section === 'cervezas') {
-        beerSec.classList.add('active');
-        partSec.classList.remove('active');
-        tabBeer.classList.add('activeTab');
-        tabPart.classList.remove('activeTab');
-      }
-    }
-    
-    // Función para añadir un jugador invitado a un día específico
-    function addPlayer(dayId) {
-      const inputId = 'input-' + dayId;
-      const listId = 'list-' + dayId;
-      const nameInput = document.getElementById(inputId);
-      let name = nameInput.value.trim();
-      if (name === '') {
-        return; // no hacer nada si está vacío
-      }
-      // Si el usuario incluyó un emoji en el nombre, lo dejamos; si no, podríamos añadir uno por defecto.
-      // Crear un nuevo elemento de lista con el nombre
-      const newLi = document.createElement('li');
-      // Opcional: podríamos hacer esto un checkbox marcado por consistencia:
-      // Crear checkbox
-      const newLabel = document.createElement('label');
-      const newCheckbox = document.createElement('input');
-      newCheckbox.type = 'checkbox';
-      newCheckbox.checked = true;
-      newCheckbox.disabled = true; // lo marcamos como solo lectura en este caso (no permitir desmarcar invitados agregados fácilmente)
-      newLabel.appendChild(newCheckbox);
-      // Texto del label con el nombre ingresado
-      const textNode = document.createTextNode(' ' + name);
-      newLabel.appendChild(textNode);
-      newLi.appendChild(newLabel);
-      // Añadir al listado de ese día
-      document.getElementById(listId).appendChild(newLi);
-      // Limpiar el campo de entrada
-      nameInput.value = '';
-      // TODO: Aquí es donde enviaríamos esta info al backend para que otros la vean
-      console.log(`Añadido jugador ${name} al día ${dayId}`);
-    }
-    
-    // Función para añadir un registro de cervezas
-    function addBeer() {
-      const nameInput = document.getElementById('beerName');
-      const amountInput = document.getElementById('beerAmount');
-      let name = nameInput.value.trim();
-      let amount = amountInput.value.trim();
-      if (name === '' || amount === '') {
-        return; // necesita ambos valores
-      }
-      // Formatear la entrada
-      const today = new Date();
-      // Obtenemos una representación de la semana (por simplicidad usamos la fecha de hoy)
-      const dateStr = today.toLocaleDateString('es-ES'); // esto dará formato dd/mm/aa
-      // Crear elemento de lista
-      const li = document.createElement('li');
-      li.innerHTML = `<span class="date">Semana ${dateStr}:</span> <span class="name">${name}</span> pagó <span class="amount">${amount}€</span>`;
-      document.getElementById('beerList').appendChild(li);
-      // Limpiar inputs
-      nameInput.value = '';
-      amountInput.value = '';
-      // TODO: Enviar este registro al backend para persistir y compartir
-      console.log(`Añadido registro cervezas: ${name} pagó ${amount}€ en fecha ${dateStr}`);
-    }
-  </script>
+      <button id="btn-add-beer" class="primary">Añadir registro</button>
+    </section>
+
+    <section class="beer-summary card">
+      <h2>Resumen por jugador</h2>
+      <div id="summary-empty" class="muted">Sin registros todavía.</div>
+      <ul id="summary-list" class="summary-list"></ul>
+    </section>
+
+    <section class="beer-history card">
+      <h2>Historial</h2>
+      <ul id="beer-list" class="beer-list"></ul>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <small>© Casa Jonfi</small>
+  </footer>
+
+  <script src="app.js"></script>
 </body>
 </html>
