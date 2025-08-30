@@ -44,7 +44,7 @@ const DEFAULT_PLAYERS = [
   {id:'jonfi',  name:'Jonfi',  emoji:'🏃‍♂️'},
   {id:'bolopo', name:'Bolopo', emoji:'🦝'}, 
   {id:'korky',  name:'Korky',  emoji:'🦅'},
-  {id:'candy',  name:'Candy',  emoji:'🚦'},
+  {id:'candy',  name:'Candy',  emoji:'💡'},
   {id:'bofi',   name:'Bofi',   emoji:'👮'},
   {id:'buades', name:'Buades', emoji:'🦊'},   // NUEVO
   {id:'ramos',  name:'Ramos',  emoji:'🏄‍♂️'} // NUEVO
@@ -352,4 +352,5 @@ function init(){
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
 
