@@ -40,13 +40,16 @@ function weekKeyFromDate(sat){ // "YYYY-WW" ISO-like (aprox)
 
 /* ======== DATOS/JUGADORES ======== */
 const DEFAULT_PLAYERS = [
-  {id:'juan',  name:'Juan',  emoji:'🐷'},
-  {id:'jonfi', name:'Jonfi', emoji:'🏃‍♂️'},
-  {id:'bolopo',name:'Bolopo',emoji:'🦝'},  // sarigüeya aprox (no hay emoji exacto)
-  {id:'korky', name:'Korky', emoji:'🦅'},
-  {id:'candy', name:'Candy', emoji:'🚦'},  // farola aprox
-  {id:'bofi',  name:'Bofi',  emoji:'👮'}
+  {id:'juan',   name:'Juan',   emoji:'🐷'},
+  {id:'jonfi',  name:'Jonfi',  emoji:'🏃‍♂️'},
+  {id:'bolopo', name:'Bolopo', emoji:'🦝'}, 
+  {id:'korky',  name:'Korky',  emoji:'🦅'},
+  {id:'candy',  name:'Candy',  emoji:'🚦'},
+  {id:'bofi',   name:'Bofi',   emoji:'👮'},
+  {id:'buades', name:'Buades', emoji:'🦊'},   // NUEVO
+  {id:'ramos',  name:'Ramos',  emoji:'🏄‍♂️'} // NUEVO
 ];
+
 
 /* ======== STATE + PERSISTENCIA LOCAL ======== */
 const STORE_KEY = 'padel-casa-jonfi-v1';
@@ -349,3 +352,4 @@ function init(){
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
