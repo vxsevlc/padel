@@ -1,6 +1,8 @@
 // app-supa.js
 
 /* ===== Supabase init ===== */
+console.log("[padel] app-supa.js cargado");
+console.log("[padel] URL:", window.SUPABASE_URL && window.SUPABASE_URL.slice(0, 40) + "…");
 const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON);
 
 /* ===== Utilidades fecha (Domingo + Festivos) ===== */
@@ -16,8 +18,8 @@ function esDateStr(d){
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 function getNextSundayFrom(today){
-  const dow = today.getDay();
-  const add = (7 - dow) % 7;
+  const dow = today.getDay();                // 0=dom, 1=lun, ...
+  const add = (7 - dow) % 7;                 // días hasta domingo
   const sun = new Date(today);
   sun.setDate(sun.getDate()+add);
   return sun;
@@ -78,28 +80,30 @@ const HOUR_OPTIONS = (() => {
 
 /* ===== Helper Supabase ===== */
 async function ensureSundayDay(weekKey, sundayISO){
+  console.log("[padel] ensureSundayDay", {weekKey, sundayISO});
   const { data: existing, error: e1 } = await supabase
-    .from('days').select('id').eq('date', sundayISO).single();
-  if(e1 && e1.code !== 'PGRST116') console.warn(e1);
+    .from('days').select('id').eq('date', sundayISO).maybeSingle();
+  if(e1){ console.warn("[padel] ensureSundayDay select warn", e1); }
 
   if(!existing){
     const { data, error } = await supabase
       .from('days').insert({ week_key: weekKey, date: sundayISO, label:'Domingo', time:'10:00' })
       .select('id').single();
-    if(error) console.error(error);
+    if(error) { console.error("[padel] ensureSundayDay insert ERROR", error); return null; }
     return data?.id || null;
   }
   return existing.id;
 }
 
 async function fetchWeek(weekKey){
+  console.log("[padel] fetchWeek", {weekKey});
   const { data: days, error: eDays } = await supabase
     .from('days')
     .select('id, week_key, date, label, time')
     .eq('week_key', weekKey)
     .order('date', { ascending: true });
 
-  if(eDays){ console.error(eDays); return {days:[], selectionsByDay:{}}; }
+  if(eDays){ console.error("[padel] fetchWeek days ERROR", eDays); return {days:[], selectionsByDay:{}}; }
 
   const dayIds = days.map(d=>d.id);
   let selectionsByDay = {};
@@ -108,7 +112,8 @@ async function fetchWeek(weekKey){
       .from('selections')
       .select('id, day_id, name')
       .in('day_id', dayIds);
-    if(!eSel && sel){
+    if(eSel){ console.error("[padel] fetchWeek selections ERROR", eSel); }
+    else if(sel){
       sel.forEach(s=>{
         if(!selectionsByDay[s.day_id]) selectionsByDay[s.day_id] = [];
         selectionsByDay[s.day_id].push(s.name);
@@ -119,48 +124,59 @@ async function fetchWeek(weekKey){
 }
 
 async function upsertFestivo(weekKey, dateISO, label='Festivo'){
+  console.log("[padel] upsertFestivo", {weekKey, dateISO, label});
   const { data: existing, error: e } = await supabase
     .from('days').select('id').eq('date', dateISO).maybeSingle();
-  if(e) console.error(e);
+  if(e) console.error("[padel] upsertFestivo select ERROR", e);
 
   if(!existing){
-    const { error } = await supabase.from('days')
+    const { error: eIns } = await supabase.from('days')
       .insert({ week_key: weekKey, date: dateISO, label, time:'10:00' });
-    if(error) console.error(error);
+    if(eIns) console.error("[padel] upsertFestivo insert ERROR", eIns);
   }else if(label && label !== 'Festivo'){
-    await supabase.from('days').update({label}).eq('id', existing.id);
+    const { error: eUpd } = await supabase.from('days').update({label}).eq('id', existing.id);
+    if(eUpd) console.error("[padel] upsertFestivo update ERROR", eUpd);
   }
 }
 
 async function setTime(dayId, hhmm){
+  console.log("[padel] setTime →", { dayId, hhmm });
   const { error } = await supabase.from('days').update({ time: hhmm }).eq('id', dayId);
-  if(error) console.error(error);
+  if (error) { console.error("[padel] setTime ERROR", error); alert("Error al guardar la hora"); }
+  await renderWeek(); // refresco inmediato
 }
 
 async function toggleSelection(dayId, name){
+  console.log("[padel] toggleSelection →", { dayId, name });
+
   const { data: exists, error: e1 } = await supabase
     .from('selections').select('id').eq('day_id', dayId).eq('name', name).maybeSingle();
-  if(e1) console.error(e1);
-  if(exists){
-    const { error } = await supabase.from('selections').delete().eq('id', exists.id);
-    if(error) console.error(error);
-  }else{
-    const { error } = await supabase.from('selections').insert({ day_id: dayId, name });
-    if(error) console.error(error);
+  if (e1) { console.error("[padel] select selection ERROR", e1); alert("Error comprobando selección"); return; }
+
+  if (exists) {
+    const { error: eDel } = await supabase.from('selections').delete().eq('id', exists.id);
+    if (eDel) { console.error("[padel] delete selection ERROR", eDel); alert("Error al desmarcar jugador"); }
+  } else {
+    const { error: eIns } = await supabase.from('selections').insert({ day_id: dayId, name });
+    if (eIns) { console.error("[padel] insert selection ERROR", eIns); alert("Error al apuntar jugador"); }
   }
+
+  await renderWeek(); // refresco inmediato
 }
 
 async function addBeerRecord(weekKey, name, amount){
+  console.log("[padel] addBeerRecord →", { weekKey, name, amount });
   const todayISO = fmtISO(new Date());
   const { error } = await supabase
     .from('beers').insert({ week_key: weekKey, date: todayISO, name, amount });
-  if(error) console.error(error);
+  if (error) { console.error("[padel] addBeerRecord ERROR", error); alert("Error al guardar cervezas"); }
+  await renderBeers(); // refresco inmediato
 }
 
 async function fetchBeers(){
   const { data, error } = await supabase
     .from('beers').select('id, week_key, date, name, amount').order('id', { ascending:false });
-  if(error){ console.error(error); return []; }
+  if(error){ console.error("[padel] fetchBeers ERROR", error); return []; }
   return data || [];
 }
 
@@ -178,7 +194,8 @@ async function renderWeek(){
   const { days, selectionsByDay } = await fetchWeek(currentWeekKey);
 
   el.daysContainer.innerHTML = '';
-  const sorted = days.slice().sort((a,b)=> (a.date<b.date? -1 : a.date>b.date? 1 : 0));
+  const sorted = (days||[]).slice().sort((a,b)=> (a.date<b.date? -1 : a.date>b.date? 1 : 0));
+
   for(const d of sorted){
     const card = document.createElement('section');
     card.className = 'card';
@@ -236,7 +253,7 @@ function renderPlayerChip(dayId, name, emoji, isSelected){
 
   chip.addEventListener('click', async ()=>{
     await toggleSelection(dayId, name);
-    // Realtime recargará la semana
+    // Realtime también disparará render, pero refrescamos ya en toggleSelection()
   });
 
   return chip;
@@ -290,7 +307,7 @@ async function addFestivo(){
 async function addBeer(){
   const name=(el.beerName.value||'').trim();
   const amount=Number((el.beerAmount.value||'').trim());
-  if(!name || !(amount>=0)) return;
+  if(!name || !(amount>=0)) { alert('Completa nombre e importe'); return; }
   await addBeerRecord(currentWeekKey, name, Math.round(amount*100)/100);
   el.beerName.value=''; el.beerAmount.value='';
 }
@@ -321,19 +338,19 @@ function subscribeWeekRealtime(weekKey){
   channelDays = supabase
     .channel('days-'+weekKey)
     .on('postgres_changes', { event: '*', schema:'public', table:'days', filter:`week_key=eq.${weekKey}` },
-      async ()=>{ await renderWeek(); })
+      async ()=>{ console.log("[padel] realtime days"); await renderWeek(); })
     .subscribe();
 
   channelSelections = supabase
     .channel('selections-'+weekKey)
     .on('postgres_changes', { event:'*', schema:'public', table:'selections' },
-      async ()=>{ await renderWeek(); })
+      async ()=>{ console.log("[padel] realtime selections"); await renderWeek(); })
     .subscribe();
 
   channelBeers = supabase
     .channel('beers')
     .on('postgres_changes', { event:'*', schema:'public', table:'beers' },
-      async ()=>{ await renderBeers(); })
+      async ()=>{ console.log("[padel] realtime beers"); await renderBeers(); })
     .subscribe();
 }
 
