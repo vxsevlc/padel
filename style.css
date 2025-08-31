@@ -1,6 +1,5 @@
 :root{
   /* === COLORES CORPORATIVOS (ajusta a tus hex exactos) === */
-  /* Inspiración Vico Export: azul marino + naranja acento */
   --brand-bg: #0b1b2b;         /* fondo cabecera */
   --brand-primary: #102a43;    /* azulado oscuro UI */
   --brand-primary-2: #1f3b56;  /* variación */
@@ -93,6 +92,20 @@ body{
   font-weight:900; font-size:1.05rem; color:#0b1220;
 }
 .day-date{ color: var(--text-muted); font-weight:600 }
+
+/* Fila de hora */
+.time-row{
+  display:flex; align-items:center; gap:10px;
+  margin-bottom:10px;
+}
+.time-row label{
+  font-weight:800; color:#0b1220;
+}
+.time-row select{
+  height: var(--tap);
+  border:2px solid #e5e7eb; border-radius: var(--radius-sm);
+  padding: 0 10px; font-weight:800; background:#fff;
+}
 
 /* Chips jugadores */
 .player-grid{
