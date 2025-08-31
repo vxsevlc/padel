@@ -1,9 +1,5 @@
-/* ======== UTILIDADES FECHA (Europa/Madrid) ======== */
+/* ======== UTILIDADES FECHA (Solo DOMINGO + Festivos) ======== */
 const MS_DAY = 86400000;
-const tzOffsetMs = (() => {
-  // For rendering we usamos local TZ; al persistir guardamos YYYY-MM-DD
-  return 0;
-})();
 
 function fmtISO(d){ // YYYY-MM-DD
   const y = d.getFullYear();
@@ -11,67 +7,70 @@ function fmtISO(d){ // YYYY-MM-DD
   const day = String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
-function esDateStr(d){ // Sábado 06/09/2025
+function esDateStr(d){ // Domingo, 07/09/2025
   const opts = { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' };
   let s = d.toLocaleDateString('es-ES', opts);
-  // capitalizar primera letra
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
-function getNextWeekendFrom(today){
-  // devuelve sábado y domingo próximos (incluye hoy si es sábado/domingo)
+function getNextSundayFrom(today){
   const dow = today.getDay(); // 0 dom ... 6 sab
-  let sat = new Date(today);
-  let addDays = (6 - dow + 7) % 7; // días hasta sábado
-  sat.setDate(sat.getDate() + addDays);
-  const sun = new Date(sat); sun.setDate(sun.getDate()+1);
-  return {sat, sun};
+  const add = (7 - dow) % 7; // días hasta domingo
+  const sun = new Date(today);
+  sun.setDate(sun.getDate() + add);
+  return sun;
 }
 function addWeeks(d, w){
   const out = new Date(d);
   out.setDate(out.getDate() + w*7);
   return out;
 }
-function weekKeyFromDate(sat){ // "YYYY-WW" ISO-like (aprox)
-  const onejan = new Date(sat.getFullYear(),0,1);
-  const millis = sat - onejan + (onejan.getTimezoneOffset()-sat.getTimezoneOffset())*60000;
+function weekKeyFromDate(sunday){ // "YYYY-WW"
+  const onejan = new Date(sunday.getFullYear(),0,1);
+  const millis = sunday - onejan + (onejan.getTimezoneOffset()-sunday.getTimezoneOffset())*60000;
   const week = Math.floor((millis / MS_DAY + onejan.getDay()+6)/7)+1;
-  return `${sat.getFullYear()}-${String(week).padStart(2,'0')}`;
+  return `${sunday.getFullYear()}-${String(week).padStart(2,'0')}`;
 }
 
-/* ======== DATOS/JUGADORES ======== */
+/* ======== JUGADORES PREDETERMINADOS ======== */
 const DEFAULT_PLAYERS = [
   {id:'juan',   name:'Juan',   emoji:'🐷'},
   {id:'jonfi',  name:'Jonfi',  emoji:'🏃‍♂️'},
-  {id:'bolopo', name:'Bolopo', emoji:'🦝'}, 
+  {id:'bolopo', name:'Bolopo', emoji:'🦝'},  // sarigüeya aprox
   {id:'korky',  name:'Korky',  emoji:'🦅'},
-  {id:'candy',  name:'Candy',  emoji:'💡'},
+  {id:'candy',  name:'Candy',  emoji:'🚦'},  // farola aprox
   {id:'bofi',   name:'Bofi',   emoji:'👮'},
-  {id:'buades', name:'Buades', emoji:'🦊'},   // NUEVO
-  {id:'ramos',  name:'Ramos',  emoji:'🏄‍♂️'} // NUEVO
+  {id:'buades', name:'Buades', emoji:'🦊'},  // aleatorio simpático
+  {id:'ramos',  name:'Ramos',  emoji:'🏄‍♂️'} // tabla de surf
 ];
 
-
 /* ======== STATE + PERSISTENCIA LOCAL ======== */
-const STORE_KEY = 'padel-casa-jonfi-v1';
-const store = {
-  // weeks: { [weekKey]: { days:{ [YYYY-MM-DD]: {players:Set([...nombres]) } }, extras:[{date,label}] } }
-  weeks: {},
-  // beers: [{weekKey, date: YYYY-MM-DD, name, amount}]
-  beers: []
-};
+/*
+ store = {
+   weeks: {
+     [weekKey]: {
+       days: {
+         [YYYY-MM-DD]: { players:Set([...]), time:"HH:MM" }
+       },
+       extras: [{date:YYYY-MM-DD, label:string}]
+     }
+   },
+   beers: [{weekKey, date:YYYY-MM-DD, name, amount}]
+ }
+*/
+const STORE_KEY = 'padel-casa-jonfi-v2';
+const store = { weeks:{}, beers:[] };
+
 function loadStore(){
   try{
     const raw = localStorage.getItem(STORE_KEY);
-    if(raw){
-      const parsed = JSON.parse(raw);
-      // restaurar sets
-      Object.values(parsed.weeks||{}).forEach(w=>{
-        Object.values((w.days||{})).forEach(d=>{
-          if(Array.isArray(d.players)) d.players = new Set(d.players);
-        });
+    if(!raw) return;
+    const parsed = JSON.parse(raw);
+    Object.values(parsed.weeks||{}).forEach(w=>{
+      Object.values(w.days||{}).forEach(d=>{
+        if(Array.isArray(d.players)) d.players = new Set(d.players);
       });
-      Object.assign(store, parsed);
-    }
+    });
+    Object.assign(store, parsed);
   }catch(e){ console.warn('No se pudo cargar store', e); }
 }
 function saveStore(){
@@ -82,7 +81,7 @@ function saveStore(){
   localStorage.setItem(STORE_KEY, JSON.stringify(copy));
 }
 
-/* ======== RENDER UI ======== */
+/* ======== ELEMENTOS ======== */
 const el = {
   tabPartidas: document.getElementById('tab-partidas'),
   tabCervezas: document.getElementById('tab-cervezas'),
@@ -106,49 +105,59 @@ const el = {
   summaryEmpty: document.getElementById('summary-empty'),
 };
 
-let weekOffset = 0; // 0 = próximo finde; -1 anterior; +1 siguiente...
-let currentWeekend = null;
+let weekOffset = 0; // 0 = próximo domingo; +/- para moverse
+let currentSunday = null;
 
-function ensureWeekStructure(weekKey, sat, sun){
+/* ======== ESTRUCTURA DE SEMANA ======== */
+function ensureWeekStructure(weekKey, sunday){
   if(!store.weeks[weekKey]){
     store.weeks[weekKey] = { days:{}, extras:[] };
   }
-  const wk = store.weeks[weekKey];
-  const dSat = fmtISO(sat), dSun = fmtISO(sun);
-  if(!wk.days[dSat]) wk.days[dSat] = {players:new Set()};
-  if(!wk.days[dSun]) wk.days[dSun] = {players:new Set()};
+  const dSun = fmtISO(sunday);
+  if(!store.weeks[weekKey].days[dSun])
+    store.weeks[weekKey].days[dSun] = { players:new Set(), time:'10:00' }; // hora por defecto
 }
 
+/* ======== SELECTOR DE HORAS (cada 15 min) ======== */
+function buildHourOptions(){
+  // 08:00 a 22:00 cada 15 minutos
+  const opts = [];
+  for(let h=8; h<=22; h++){
+    for(let m=0; m<60; m+=15){
+      const hh = String(h).padStart(2,'0');
+      const mm = String(m).padStart(2,'0');
+      opts.push(`${hh}:${mm}`);
+    }
+  }
+  return opts;
+}
+const HOUR_OPTIONS = buildHourOptions();
+
+/* ======== RENDER SEMANA ======== */
 function renderWeek(){
   const today = new Date();
-  const base = getNextWeekendFrom(today);
-  const baseSat = addWeeks(base.sat, weekOffset);
-  const baseSun = addWeeks(base.sun, weekOffset);
-  currentWeekend = {sat:baseSat, sun:baseSun};
-  const weekKey = weekKeyFromDate(baseSat);
+  const baseSunday = addWeeks(getNextSundayFrom(today), weekOffset);
+  currentSunday = baseSunday;
+  const weekKey = weekKeyFromDate(baseSunday);
 
-  ensureWeekStructure(weekKey, baseSat, baseSun);
+  ensureWeekStructure(weekKey, baseSunday);
   saveStore();
 
-  // Título semana
-  const title = `Semana ${baseSat.getDate()}/${baseSat.getMonth()+1} - ${baseSun.getDate()}/${baseSun.getMonth()+1} ${baseSun.getFullYear()}`;
-  el.weekTitle.textContent = title;
+  el.weekTitle.textContent = `Semana ${baseSunday.getDate()}/${baseSunday.getMonth()+1}/${baseSunday.getFullYear()}`;
 
-  // Render días
   const wk = store.weeks[weekKey];
   el.daysContainer.innerHTML = '';
+
   const days = [
-    {date: baseSat, label:'Sábado'},
-    {date: baseSun, label:'Domingo'}
+    {date: baseSunday, label:'Domingo'}
   ];
 
-  // extras (ordenar por fecha asc)
+  // añadir festivos guardados
   const extras = (wk.extras||[]).slice().sort((a,b)=> a.date.localeCompare(b.date));
   extras.forEach(x=>{
     const d = new Date(x.date+'T00:00:00');
+    if(!wk.days[x.date]) wk.days[x.date] = { players:new Set(), time:'10:00' };
     days.push({date:d, label: x.label || 'Festivo'});
-    // asegurar estructura día extra
-    if(!wk.days[x.date]) wk.days[x.date] = {players:new Set()};
   });
 
   days.forEach(d=>{
@@ -156,31 +165,49 @@ function renderWeek(){
     const card = document.createElement('section');
     card.className = 'card';
 
+    // Cabecera día
     const head = document.createElement('div');
     head.className = 'day-head';
     const t = document.createElement('div');
-    t.className = 'day-title';
-    t.textContent = d.label;
+    t.className = 'day-title'; t.textContent = d.label;
     const dt = document.createElement('div');
-    dt.className = 'day-date';
-    dt.textContent = esDateStr(d.date);
+    dt.className = 'day-date'; dt.textContent = esDateStr(d.date);
     head.appendChild(t); head.appendChild(dt);
     card.appendChild(head);
 
-    // grid jugadores habituales
+    // Selector de hora
+    const timeRow = document.createElement('div');
+    timeRow.className = 'time-row';
+    const lbl = document.createElement('label');
+    lbl.textContent = 'Hora';
+    const select = document.createElement('select');
+    HOUR_OPTIONS.forEach(hhmm=>{
+      const opt = document.createElement('option');
+      opt.value = hhmm; opt.textContent = hhmm;
+      select.appendChild(opt);
+    });
+    // valor guardado o por defecto
+    const savedTime = store.weeks[weekKey].days[dayKey]?.time || '10:00';
+    select.value = savedTime;
+    select.addEventListener('change', ()=>{
+      setTimeForDay(weekKey, dayKey, select.value);
+    });
+    timeRow.appendChild(lbl); timeRow.appendChild(select);
+    card.appendChild(timeRow);
+
+    // grid de jugadores
     const grid = document.createElement('div');
     grid.className = 'player-grid';
     DEFAULT_PLAYERS.forEach(p=>{
       grid.appendChild(renderPlayerChip(weekKey, dayKey, p.name, p.emoji));
     });
 
-    // invitados ya guardados (no duplicar con habituales)
+    // invitados (no duplicar)
     const savedNames = Array.from((store.weeks[weekKey].days[dayKey]?.players)||[]);
     const guestOnly = savedNames.filter(n => !DEFAULT_PLAYERS.some(dp=>dp.name===n));
     guestOnly.forEach(name=>{
-      grid.appendChild(renderPlayerChip(weekKey, dayKey, name, '👤', /*isGuest*/true));
+      grid.appendChild(renderPlayerChip(weekKey, dayKey, name, '👤', true));
     });
-
     card.appendChild(grid);
 
     // Añadir invitado
@@ -194,7 +221,6 @@ function renderWeek(){
       const name = (inp.value||'').trim();
       if(!name) return;
       addPlayerToDay(weekKey, dayKey, name);
-      // render chip
       grid.appendChild(renderPlayerChip(weekKey, dayKey, name, '👤', true));
       inp.value='';
     });
@@ -205,6 +231,7 @@ function renderWeek(){
   });
 }
 
+/* ======== RENDER CHIP JUGADOR ======== */
 function renderPlayerChip(weekKey, dayKey, name, emoji, isGuest=false){
   const isSelected = !!store.weeks[weekKey].days[dayKey]?.players?.has(name);
   const chip = document.createElement('button');
@@ -242,28 +269,32 @@ function togglePlayer(weekKey, dayKey, name){
   if(day.players.has(name)) day.players.delete(name); else day.players.add(name);
   saveStore();
 }
+function setTimeForDay(weekKey, dayKey, hhmm){
+  const day = store.weeks[weekKey].days[dayKey];
+  day.time = hhmm;
+  saveStore();
+}
 
 /* ======== FESTIVO ======== */
 function addFestivo(){
   const dateStr = (el.festivoDate.value||'').trim();
   if(!dateStr) return;
   const label = (el.festivoLabel.value||'').trim();
-  const {sat} = currentWeekend;
-  const wkKey = weekKeyFromDate(sat);
+  const wkKey = weekKeyFromDate(currentSunday);
   const wk = store.weeks[wkKey];
 
-  // validar que la fecha cae dentro de la semana del sábado (lun-dom de esa semana)
-  const monday = new Date(sat); monday.setDate(sat.getDate()-5); // lunes (siendo sab = día 6)
-  const sunday = new Date(sat); sunday.setDate(sat.getDate()+1);
-
+  // Rango de semana: lunes a domingo de esa semana (dom es currentSunday)
+  const sunday = new Date(currentSunday);
+  const monday = new Date(sunday); monday.setDate(sunday.getDate()-6); // lunes
   const d = new Date(dateStr+'T00:00:00');
+
   if(d < monday || d > sunday){
     alert('La fecha no pertenece a esta semana.');
     return;
   }
   if(!wk.extras.some(x=>x.date===dateStr)){
     wk.extras.push({date:dateStr, label: label || 'Festivo'});
-    if(!wk.days[dateStr]) wk.days[dateStr] = {players:new Set()};
+    if(!wk.days[dateStr]) wk.days[dateStr] = {players:new Set(), time:'10:00'};
     saveStore();
     renderWeek();
   }
@@ -275,8 +306,7 @@ function addBeer(){
   const name = (el.beerName.value||'').trim();
   const amount = Number((el.beerAmount.value||'').trim());
   if(!name || !(amount>=0)) return;
-  const {sat} = currentWeekend;
-  const wkKey = weekKeyFromDate(sat);
+  const wkKey = weekKeyFromDate(currentSunday);
   const today = new Date();
   const entry = {weekKey: wkKey, date: fmtISO(today), name, amount: Math.round(amount*100)/100};
   store.beers.push(entry);
@@ -284,11 +314,10 @@ function addBeer(){
   el.beerName.value=''; el.beerAmount.value='';
   renderBeer();
 }
-
 function renderBeer(){
   // Historial
   el.beerList.innerHTML = '';
-  const items = store.beers.slice().reverse(); // último primero
+  const items = store.beers.slice().reverse();
   if(items.length===0){
     el.beerList.innerHTML = '<li class="muted">Sin registros.</li>';
   }else{
@@ -344,13 +373,12 @@ function init(){
   // cervezas
   el.btnAddBeer.addEventListener('click', addBeer);
 
-  // fecha festivo por defecto = hoy
-  const today = new Date(); el.festivoDate.value = fmtISO(today);
+  // por defecto
+  const today = new Date();
+  el.festivoDate.value = fmtISO(today);
 
   renderWeek();
   renderBeer();
 }
 
 document.addEventListener('DOMContentLoaded', init);
-
-
