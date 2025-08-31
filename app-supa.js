@@ -18,8 +18,8 @@ function esDateStr(d){
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 function getNextSundayFrom(today){
-  const dow = today.getDay();                // 0=dom, 1=lun, ...
-  const add = (7 - dow) % 7;                 // días hasta domingo
+  const dow = today.getDay();
+  const add = (7 - dow) % 7;
   const sun = new Date(today);
   sun.setDate(sun.getDate()+add);
   return sun;
@@ -37,7 +37,7 @@ const DEFAULT_PLAYERS = [
   {id:'jonfi',  name:'Jonfi',  emoji:'🏃‍♂️'},
   {id:'bolopo', name:'Bolopo', emoji:'🦝'},
   {id:'korky',  name:'Korky',  emoji:'🦅'},
-  {id:'candy',  name:'Candy',  emoji:'🚦'},
+  {id:'candy',  name:'Candy',  emoji:'💡'},   // <- bombilla
   {id:'bofi',   name:'Bofi',   emoji:'👮'},
   {id:'buades', name:'Buades', emoji:'🦊'},
   {id:'ramos',  name:'Ramos',  emoji:'🏄‍♂️'},
@@ -253,7 +253,6 @@ function renderPlayerChip(dayId, name, emoji, isSelected){
 
   chip.addEventListener('click', async ()=>{
     await toggleSelection(dayId, name);
-    // Realtime también disparará render, pero refrescamos ya en toggleSelection()
   });
 
   return chip;
@@ -268,7 +267,16 @@ async function renderBeers(){
   }else{
     data.forEach(it=>{
       const li=document.createElement('li');
-      li.innerHTML = `<span>${it.week_key} · ${it.date} · <strong>${it.name}</strong></span><span class="amount">${Number(it.amount).toFixed(2)}€</span>`;
+      li.innerHTML = `
+        <span>${it.week_key} · ${it.date} · <strong>${it.name}</strong></span>
+        <span class="amount">${Number(it.amount).toFixed(2)}€</span>
+        <button class="delete-btn" title="Borrar">❌</button>
+      `;
+      li.querySelector('.delete-btn').addEventListener('click', async ()=>{
+        const { error } = await supabase.from('beers').delete().eq('id', it.id);
+        if(error){ console.error("[padel] delete beer ERROR", error); alert("Error al borrar"); }
+        await renderBeers();
+      });
       el.beerList.appendChild(li);
     });
   }
