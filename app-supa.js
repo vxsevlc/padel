@@ -37,7 +37,7 @@ const DEFAULT_PLAYERS = [
   {id:'jonfi',  name:'Jonfi',  emoji:'🏃‍♂️'},
   {id:'bolopo', name:'Bolopo', emoji:'🦝'},
   {id:'korky',  name:'Korky',  emoji:'🦅'},
-  {id:'candy',  name:'Candy',  emoji:'💡'},   // <- bombilla
+  {id:'candy',  name:'Candy',  emoji:'💡'},
   {id:'bofi',   name:'Bofi',   emoji:'👮'},
   {id:'buades', name:'Buades', emoji:'🦊'},
   {id:'ramos',  name:'Ramos',  emoji:'🏄‍♂️'},
@@ -143,7 +143,7 @@ async function setTime(dayId, hhmm){
   console.log("[padel] setTime →", { dayId, hhmm });
   const { error } = await supabase.from('days').update({ time: hhmm }).eq('id', dayId);
   if (error) { console.error("[padel] setTime ERROR", error); alert("Error al guardar la hora"); }
-  await renderWeek(); // refresco inmediato
+  await renderWeek();
 }
 
 async function toggleSelection(dayId, name){
@@ -161,7 +161,7 @@ async function toggleSelection(dayId, name){
     if (eIns) { console.error("[padel] insert selection ERROR", eIns); alert("Error al apuntar jugador"); }
   }
 
-  await renderWeek(); // refresco inmediato
+  await renderWeek();
 }
 
 async function addBeerRecord(weekKey, name, amount){
@@ -170,7 +170,7 @@ async function addBeerRecord(weekKey, name, amount){
   const { error } = await supabase
     .from('beers').insert({ week_key: weekKey, date: todayISO, name, amount });
   if (error) { console.error("[padel] addBeerRecord ERROR", error); alert("Error al guardar cervezas"); }
-  await renderBeers(); // refresco inmediato
+  await renderBeers();
 }
 
 async function fetchBeers(){
@@ -246,10 +246,12 @@ function renderPlayerChip(dayId, name, emoji, isSelected){
   chip.className = 'player-chip' + (isSelected ? ' selected' : '');
   chip.type='button';
   chip.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+  const left=document.createElement('div'); left.className='chip-left';
   const em=document.createElement('span'); em.className='emoji'; em.textContent = emoji || '🎾';
   const nm=document.createElement('span'); nm.className='name'; nm.textContent = name;
+  left.appendChild(em); left.appendChild(nm);
   const st=document.createElement('span'); st.className='state'; st.textContent = isSelected ? 'apuntado' : 'libre';
-  chip.appendChild(em); chip.appendChild(nm); chip.appendChild(st);
+  chip.appendChild(left); chip.appendChild(st);
 
   chip.addEventListener('click', async ()=>{
     await toggleSelection(dayId, name);
