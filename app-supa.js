@@ -37,7 +37,7 @@ const DEFAULT_PLAYERS = [
   {id:'jonfi',  name:'Jonfi',  emoji:'🏃‍♂️'},
   {id:'bolopo', name:'Bolopo', emoji:'🦝'},
   {id:'korky',  name:'Korky',  emoji:'🦅'},
-  {id:'candy',  name:'Candy',  emoji:'💡'},
+  {id:'candy',  name:'Candy',  emoji:'💡'},   // bombilla
   {id:'bofi',   name:'Bofi',   emoji:'👮'},
   {id:'buades', name:'Buades', emoji:'🦊'},
   {id:'ramos',  name:'Ramos',  emoji:'🏄‍♂️'},
@@ -139,6 +139,13 @@ async function upsertFestivo(weekKey, dateISO, label='Festivo'){
   }
 }
 
+async function deleteDay(dayId){
+  console.log("[padel] deleteDay", {dayId});
+  const { error } = await supabase.from('days').delete().eq('id', dayId);
+  if(error){ console.error("[padel] deleteDay ERROR", error); alert("Error al borrar el día"); }
+  await renderWeek();
+}
+
 async function setTime(dayId, hhmm){
   console.log("[padel] setTime →", { dayId, hhmm });
   const { error } = await supabase.from('days').update({ time: hhmm }).eq('id', dayId);
@@ -201,9 +208,32 @@ async function renderWeek(){
     card.className = 'card';
 
     const head = document.createElement('div'); head.className='day-head';
+
+    const left = document.createElement('div');
+    left.className='day-left';
     const t = document.createElement('div'); t.className='day-title'; t.textContent = d.label;
     const dt = document.createElement('div'); dt.className='day-date'; dt.textContent = esDateStr(new Date(d.date+'T00:00:00'));
-    head.appendChild(t); head.appendChild(dt); card.appendChild(head);
+    left.appendChild(t); left.appendChild(dt);
+
+    const actions = document.createElement('div');
+    actions.className = 'day-actions';
+    // Botón borrar (oculto para Domingo)
+    if (d.label !== 'Domingo') {
+      const del = document.createElement('button');
+      del.className = 'icon-btn danger';
+      del.title = 'Borrar día';
+      del.textContent = '🗑️';
+      del.addEventListener('click', async ()=>{
+        if(confirm('¿Seguro que quieres borrar este día? Se eliminarán también los apuntados de este día.')){
+          await deleteDay(d.id);
+        }
+      });
+      actions.appendChild(del);
+    }
+
+    head.appendChild(left);
+    head.appendChild(actions);
+    card.appendChild(head);
 
     const timeRow = document.createElement('div'); timeRow.className='time-row';
     const lbl = document.createElement('label'); lbl.textContent='Hora';
