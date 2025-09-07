@@ -37,7 +37,7 @@ const DEFAULT_PLAYERS = [
   {id:'jonfi',  name:'Jonfi',  emoji:'🏃‍♂️'},
   {id:'bolopo', name:'Bolopo', emoji:'🦝'},
   {id:'korky',  name:'Korky',  emoji:'🦅'},
-  {id:'candy',  name:'Candy',  emoji:'💡'},   // bombilla
+  {id:'candy',  name:'Candy',  emoji:'💡'},
   {id:'bofi',   name:'Bofi',   emoji:'👮'},
   {id:'buades', name:'Buades', emoji:'🦊'},
   {id:'ramos',  name:'Ramos',  emoji:'🏄‍♂️'},
@@ -217,7 +217,6 @@ async function renderWeek(){
 
     const actions = document.createElement('div');
     actions.className = 'day-actions';
-    // Botón borrar (oculto para Domingo)
     if (d.label !== 'Domingo') {
       const del = document.createElement('button');
       del.className = 'icon-btn danger';
@@ -276,12 +275,16 @@ function renderPlayerChip(dayId, name, emoji, isSelected){
   chip.className = 'player-chip' + (isSelected ? ' selected' : '');
   chip.type='button';
   chip.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+
   const left=document.createElement('div'); left.className='chip-left';
   const em=document.createElement('span'); em.className='emoji'; em.textContent = emoji || '🎾';
   const nm=document.createElement('span'); nm.className='name'; nm.textContent = name;
   left.appendChild(em); left.appendChild(nm);
+
   const st=document.createElement('span'); st.className='state'; st.textContent = isSelected ? 'apuntado' : 'libre';
-  chip.appendChild(left); chip.appendChild(st);
+
+  chip.appendChild(left);
+  chip.appendChild(st);
 
   chip.addEventListener('click', async ()=>{
     await toggleSelection(dayId, name);
