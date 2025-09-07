@@ -9,6 +9,7 @@
   --chip:#f3f6fa;
   --chip-border:#e4e9f1;
   --ok:#0ea5e9;
+  --danger:#ef4444;
 }
 
 *{ box-sizing: border-box; }
@@ -98,11 +99,26 @@ body{
 .day-head{
   display:flex;
   justify-content:space-between;
-  align-items:center;
+  align-items:flex-start;
   margin-bottom:8px;
+  gap:8px;
 }
+.day-left{ display:flex; flex-direction:column; gap:2px; }
 .day-title{ font-weight:800; }
 .day-date{ color:#8497ad; font-size:12px; }
+
+.day-actions{ display:flex; gap:6px; }
+.icon-btn{
+  background:#fff;
+  border:1px solid var(--chip-border);
+  border-radius:10px;
+  padding:6px 8px;
+  line-height:1;
+}
+.icon-btn.danger{
+  border-color:#f3c1c1;
+  color:#b91c1c;
+}
 
 /* Hora */
 .time-row{
@@ -124,14 +140,14 @@ body{
 /* GRID DE JUGADORES (SIEMPRE CABE) */
 .player-grid{
   display:grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 columnas fijo en móvil */
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 columnas en móvil */
   gap:10px;
   margin-bottom:10px;
 }
 
 /* CHIP de jugador */
 .player-chip{
-  min-width:0;                /* evita desbordes */
+  min-width:0;
   width:100%;
   display:flex;
   align-items:center;
@@ -139,7 +155,7 @@ body{
   padding:10px 12px;
   border-radius:14px;
   background:var(--chip);
-  border:2px solid transparent;       /* evita cambio de tamaño al seleccionar */
+  border:2px solid transparent;   /* evita “salto” al seleccionar */
   color:#0c1a2a;
   transition: transform .06s ease, border-color .12s ease, background .12s ease;
 }
@@ -148,7 +164,7 @@ body{
 .player-chip .name{
   font-weight:700;
   font-size:14px;
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; /* que no rompa */
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 .player-chip .state{
   font-size:12px;
@@ -157,7 +173,7 @@ body{
 
 .player-chip:active{ transform: scale(.98); }
 .player-chip.selected{
-  background:#fff7ed;                 /* tono suave */
+  background:#fff7ed;
   border-color: var(--brand);
 }
 .player-chip.selected .state{
@@ -237,7 +253,7 @@ body{
   margin-top:16px;
 }
 
-/* Responsivo un poco más ancho (tablets pequeñas) */
+/* Responsivo */
 @media (min-width: 430px){
   .player-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
